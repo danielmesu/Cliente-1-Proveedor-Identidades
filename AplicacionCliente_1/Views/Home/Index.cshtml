@@ -1,0 +1,33 @@
+﻿@using IdentityModel
+@using System.Security.Claims
+
+<div class="information-container">
+    <div class="body-information">
+    
+        <div class="header">
+            <div class="nav">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </div>
+        
+        <div class="container">
+        
+            <div class="user-info">
+                <h2>Bienvenido, ¡@User!.Identity!.Name!</h2>
+                <div class="info-text">
+                    Esta ventana contiene información del usuario autenticado y solo puede visualizarse con un token de acceso vigente y un rol del tipo "administrador" o "soporte".
+                </div>
+                <p><strong>Email:</strong> @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value</p>
+                <p><strong>Rol:</strong>  @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
+            </div>
+        
+            <div class="logout-button">
+                <form asp-controller="Account" asp-action="Logout" method="get">
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                </form>
+            </div>
+        </div>
+    
+    </div>
+</div>

@@ -1,0 +1,33 @@
+﻿@using System.Security.Claims
+
+<div class="information-container">
+    <div class="body-informacion">
+    
+        <div class="header">
+            <div class="nav">
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </div>
+        
+        <div class="container">
+        
+            <div class="user-info">
+                <h2>Bienvenido a la ventana de privacidad, ¡@User!.Identity!.Name!</h2>
+                <div class="info-text">
+                    Esta ventana contiene datos de <strong> mayor privacidad </strong> y solo puede visualizarse con un token de acceso vigente y un rol del tipo "administrador".
+                </div>
+                <p><strong>Email:</strong> @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value</p>
+                <p><strong>Rol:</strong>  @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
+                <p><strong>JWT:</strong>  @User.Claims.FirstOrDefault(c => c.Type == "Token")?.Value</p>
+            </div>
+        
+            <div class="logout-button">
+                <form asp-controller="Account" asp-action="Logout" method="get">
+                    <button type="submit" class="btn btn-outline-danger">Logout</button>
+                </form>
+            </div>
+        </div>
+    
+    </div>
+</div>
