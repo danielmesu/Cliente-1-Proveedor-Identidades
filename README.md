@@ -1,23 +1,34 @@
-# Proveedor de identidades C#
+# Cliente 1 proveedor de identidades C#
 
 Este proyecto está realizado en .NET 8.0 C#.
 
-Es una aplicación web de única página que trabaja como un proveedor de identidades y tokens de acceso por medio del nuget IdentityServer4.
+Es una aplicación web MVC que trabaja como un cliente del proveedor de identidades C#.
+
+Este proyecto incluye un proceso de autenticación mediante login de credenciales básicas (usuario y contraseña) y diversas vistas protegidas mediante autenticación y autorización por RBA (acceso por roles).
 
 ## Program
 
-En el archivo program se configura el servicio de IdentityServer4 con los siguientes métodos: 
+En el archivo program se configura el servicio de autenticación, la cookie de enrutamiento de vistas y la inyección singleton del módulo de autenticación como dependencia usando inversión de control.
 
-- AddIdentityServer(): Agrega el servidor de identidades al programa. 
+## ModuloAutenticacionProveedorCSharp
 
-- AddDeveloperSigningCredential(): Realiza la firma de un certificado de desarrollo para poder generar tokens firmados.
+Este módulo es inyectado como dependencia a través de inversión de control, y permite la autenticación del usuario mediante el consumo HTTP del proveedor de identidades c# mediante los siguientes métodos: 
 
-- AddInMemoryClients(): Agrega una lista de clientes del servidor, cada cliente se comportará como una aplicacón registrada a la cual los usuarios podrán solicitar autenticación. 
+- ConsumirProveedorIdentidades(): Realiza el consumo rest del servicio de autenticación del proveedor de identidades c# (externo), y según la respuesta del servicio, se genera la de serialización de la respuesta en el objeto "TokenResponse".
 
-- AddInMemoryApiResources(): Agrega los recursos de la api de autenticación indicando los scopes que tendrá la autenticación y los claims que serán incluidos en los JWT.
+- AutenticarUsuario(): Con base en lo obtenido mediante el método ConsumirProveedorIdentidades(), se crea un controlador de JWT que permite extraer los claims del usuario y con estos crear el "ClaimsPrincipal" de la sesión del usuario para generar la autenticación de este en el contexto HTTP del programa, abriendo una sesión para el usuario a través del token de acceso dado por el proveedor; que al ser centralizado puede funcionar como un SSO para diferentes clientes. 
 
-- AddInMemoryApiScopes(): Agrega las instancias simuladas de los scopes de la aplicación.
+## AccountController 
 
-- AddTestUsers(): Agrega una lista de usuarios simulados, esta información corresponde a la base de datos de credenciales para cada usuario registrado, incluye los datos de autenticación y los claims que tendrá cada usuario.
+Este controlador se usa por defecto en el programa para habilitar la interfaz de login, y a través del módulo de autenticación inyectado como dependencia se realiza la autenticación del usuario. También contiene servicios para la generación de vista de acceso denegado para usuarios sin autorización y el servicio de cierre de sesión que finaliza la sesión del usuario en el contexto HTTP del programa. 
 
-- UseIdentityServer(): Agrega el servidor de autenticación ya configurado a la aplicación.
+## HomeController
+
+Este controlador es la capa funcional que requiere de una sesión de usuario abierta, para esto se usa el decorador [Authorize] que indica que el usuario debe estar autenticado en el sistema para poder acceder a los siguientes servicios expuestos: 
+
+- Index(): Genera la vista "Home" de la aplicación, en ella se expone una breve descripción del funcionamiento y se visualizan algunos claims no sensibles del usuario obtenidos a través de la identidad de su sesión. 
+
+- Privacy(): Este servicio tiene una capa de protección a través de RBA por medio del decorador [Authorize(Roles = "administrador")], el cual indica que el servicio solo estará disponible para usuarios cuyo claim de rol sea "administrador", en caso contrario el sistema dirigirá al usuario a la vista definida por "AccessDeniedPath" en el program, que presenta una interfaz indicando al usuario que no tiene acceso permitido para visualizar la información del servicio solicitado. 
+En caso de que el usuario sí tenga el rol solicitado, se presenta una vista donde se expone una breve descripción del funcionamiento y se visualizan claims no sensibles del usuario y el claim del JWT entregado por el proveedor de identidades, el cual se entiende como dato sensible. 
+
+- Error(): Como parte del control de la aplicación, este servicio expone una vista genérica en caso de que se presente un error en el sistema. 
